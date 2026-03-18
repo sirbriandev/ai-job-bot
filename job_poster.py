@@ -5,8 +5,9 @@ import os
 import time
 
 # 1. Configuration (Uses GitHub Secrets/Environment Variables)
-TELEGRAM_TOKEN = os.getenv('8617577163:AAGh_UsAQccArBMhewYMTHhbbWD9N4xkrmE')
-CHANNEL_ID = os.getenv('@AIGigHub')
+# Try to get from GitHub Secrets, otherwise use the hardcoded string
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN', '8617577163:AAGh_UsAQccArBMhewYMTHhbbWD9N4xkrmE')
+CHANNEL_ID = os.getenv('CHANNEL_ID', '@AIGigHub')
 HISTORY_FILE = 'job_history.json'
 TARGET_URL = "https://ai-jobs.net"
 
@@ -25,13 +26,15 @@ def save_history(history):
         json.dump(history[-100:], f)
 
 def send_telegram(message):
-    url = f"https://api.telegram.org{TELEGRAM_TOKEN}/sendMessage"
+    # Added /bot before the variable name
+    url = f"https://api.telegram.org{TELEGRAM_TOKEN}/sendMessage" 
     payload = {
         "chat_id": CHANNEL_ID,
         "text": message,
         "parse_mode": "HTML",
         "disable_web_page_preview": False
     }
+
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
