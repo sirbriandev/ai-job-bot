@@ -1,0 +1,9 @@
+# Local history and secrets
+job_history.json
+.env
+
+# Python system files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
