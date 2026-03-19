@@ -6,8 +6,8 @@ import time
 
 # 1. Configuration (Uses GitHub Secrets/Environment Variables)
 # Try to get from GitHub Secrets, otherwise use the hardcoded string
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN', '8617577163:AAHYST68UM40ITIqazijw1VbSxysRKN2ixg')
-CHANNEL_ID = os.getenv('CHANNEL_ID', '@AIGigHub')
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+CHANNEL_ID = os.getenv('CHANNEL_ID')
 HISTORY_FILE = 'job_history.json'
 TARGET_URL = "https://ai-jobs.net"
 
