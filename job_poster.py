@@ -89,9 +89,6 @@ def main():
     new_jobs_found = 0
     for job in reversed(jobs[:10]): 
         if job['id'] not in history:
-
-     # To this (just for one test run):
-        if True: 
             # The HTML Format for Telegram
             post_text = (
                 f"🤖 <b>NEW AI JOB POSTING</b>\n\n"
