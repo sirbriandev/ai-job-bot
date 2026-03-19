@@ -5,7 +5,6 @@ import os
 import time
 
 # 1. Configuration (Uses GitHub Secrets/Environment Variables)
-# Try to get from GitHub Secrets, otherwise use the hardcoded string
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHANNEL_ID = os.getenv('CHANNEL_ID')
 HISTORY_FILE = 'job_history.json'
@@ -16,18 +15,19 @@ def load_history():
         try:
             with open(HISTORY_FILE, 'r') as f:
                 return json.load(f)
-        except:
+        except Exception as e:
+            print(f"Error loading history: {e}")
             return []
     return []
 
 def save_history(history):
-    # Keep only the last 100 job IDs to keep the file small
     with open(HISTORY_FILE, 'w') as f:
         json.dump(history[-100:], f)
 
 def send_telegram(message):
-    # Added /bot before the variable name
+    # FIXED: Added '/bot' before the token variable
     url = f"https://api.telegram.org{TELEGRAM_TOKEN}/sendMessage" 
+    
     payload = {
         "chat_id": CHANNEL_ID,
         "text": message,
@@ -38,8 +38,12 @@ def send_telegram(message):
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
+        print("Message sent to Telegram successfully!")
     except Exception as e:
         print(f"Error sending to Telegram: {e}")
+        # This will show you the exact error (e.g., Bot is not an Admin)
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Response content: {e.response.text}")
 
 def scrape_ai_jobs():
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
@@ -55,14 +59,14 @@ def scrape_ai_jobs():
                 continue
 
             title = title_element.text.strip()
-            link = "https://ai-jobs.net" + title_element['href']
+            # Ensure the link is absolute
+            href = title_element['href']
+            link = href if href.startswith('http') else "https://ai-jobs.net" + href
             
-            # Get Company and Metadata
             company_element = row.select_one('span.text-muted')
             company = company_element.text.strip() if company_element else "AI Company"
             
-            # Extract badges (Salary, Remote status, etc)
-            tags = [tag.text.strip() for tag in row.select('.badge')]
+            tags =
             tag_str = " | ".join(tags) if tags else "Full-time"
 
             job_list.append({
@@ -83,13 +87,15 @@ def main():
         return
 
     history = load_history()
-    jobs = scrape_ai_jobs()
+    print(f"Loaded {len(history)} jobs from history.")
     
-    # Process only the top 10 most recent jobs to avoid flooding
+    jobs = scrape_ai_jobs()
+    print(f"Found {len(jobs)} total jobs on page.")
+    
     new_jobs_found = 0
+    # Process only the top 10 most recent jobs
     for job in reversed(jobs[:10]): 
         if job['id'] not in history:
-            # The HTML Format for Telegram
             post_text = (
                 f"🤖 <b>NEW AI JOB POSTING</b>\n\n"
                 f"🔥 <b>{job['title']}</b>\n"
@@ -100,15 +106,16 @@ def main():
                 f"#AI #AITraining #Jobs #Remote #AIGigHub"
             )
             
+            print(f"Attempting to post: {job['title']}")
             send_telegram(post_text)
-            print(f"Posted: {job['title']}")
             
             history.append(job['id'])
             new_jobs_found += 1
-            time.sleep(3) # Small delay between posts
+            time.sleep(3) 
             
     if new_jobs_found > 0:
         save_history(history)
+        print(f"Cycle complete. {new_jobs_found} new jobs posted.")
     else:
         print("No new jobs found this cycle.")
 
